@@ -3,7 +3,7 @@ window.initCgLinkGraph = function({visState, renderAll, data, cgSel}){
 
   var c = d3.conventions({
     sel: cgSel.select('.link-graph').html(''),
-    margin: {left: visState.isHideLayer ? 0 : 30, bottom: 85},
+    margin: {left: visState.isHideLayer ? 0 : 30},
     layers: 'sccccs',
   })
   
@@ -32,7 +32,10 @@ window.initCgLinkGraph = function({visState, renderAll, data, cgSel}){
   var xRange = [0].concat(ctxCounts.map(d => d.cumsum * c.width / cumsum))
   c.x = d3.scaleLinear().domain(xDomain.map(d => d + 1)).range(xRange)
   
-  var yNumTicks= visState.isHideLayer ? data.byStream.length : 19
+  // const n_layers = 18;
+  const n_layers = metadata.n_layers + 1;
+  // const n_layers = 40;
+  var yNumTicks= visState.isHideLayer ? data.byStream.length : n_layers + 1
   c.y = d3.scaleBand(d3.range(yNumTicks), [c.height, 0])
 
   c.yAxis = d3.axisLeft(c.y)
@@ -40,7 +43,7 @@ window.initCgLinkGraph = function({visState, renderAll, data, cgSel}){
     .tickFormat(i => {
       if (i % 2) return
       
-      return i == 18 ? 'Lgt' : i == 0 ? 'Emb' : 'L' + i
+      return i == n_layers ? 'Lgt' : i == 0 ? 'Emb' : 'L' + i
       var label = data.byStream[i][0].layerLocationLabel
       var layer = +label.replace('L', '')
       return isFinite(layer) && layer % 2 ? '' : label
@@ -87,8 +90,12 @@ window.initCgLinkGraph = function({visState, renderAll, data, cgSel}){
     c.x(d.ctx_idx) + d.xOffset, 
     c.y(d.streamIdx) + c.y.bandwidth()/2 + d.yOffset
   ])
+  const filt = nodes.filter(d => d.pos.some(x => !isFinite(x)))
+  // console.log("nodes", filt)
+  filt.forEach(d => console.log([
+    d.streamIdx, c.y(d.streamIdx), c.y.bandwidth(), c.y.bandwidth()/2, d.yOffset,
+  ]))
 
-  
   // hover poitns
   var maxHoverDistance = 30
   c.sel
